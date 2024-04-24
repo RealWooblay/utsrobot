@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv
-
+# added comment to check pull request - will remove later
 # Initialize Video Capture
 cap = cv.VideoCapture(0)
 if not cap.isOpened():
