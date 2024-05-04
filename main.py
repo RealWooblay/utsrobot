@@ -1,11 +1,44 @@
-import numpy as np
+import numpy as np 
 import cv2 as cv
-# added comment to check pull request - will remove later
+from gpiozero import Servo
+from time import sleep
+
+# Setting up the GPIO pin for the servo
+from gpiozero.pins.pigpio import PiGPIOFactory
+
+# Use the PiGPIOFactory for more precise control
+factory = PiGPIOFactory()
+
+# Setup the servo on GPIO 17
+servo = Servo(17, pin_factory=factory)  
+
 # Initialize Video Capture
 cap = cv.VideoCapture(0)
 if not cap.isOpened():
     print("Cannot open camera")
     exit()
+
+#Steering geometry
+
+wheelbase = 0.02 # meters, example value
+track_width = 0.01 # meters, example value
+
+# Add steering geometry to control servo 
+def calculate_ackermann_angles(servo_pos, wheelbase, track_width):
+    """ Calculate the Ackermann steering angles based on servo position. """
+    master_angle = np.interp(servo_pos, [-1, 1], [-30, 30])  # servo position ranges from -1 to 1
+    if master_angle == 0:
+        return (0, 0)
+    radius = wheelbase / np.tan(np.radians(master_angle))
+    left_angle = np.degrees(np.arctan(wheelbase / (radius - track_width / 2)))
+    right_angle = np.degrees(np.arctan(wheelbase / (radius + track_width / 2)))
+    return (left_angle, right_angle)
+
+def set_servo_angle(angle):
+    """ Set servo position based on angle (-30 to 30 degrees). """
+    position = np.interp(angle, [-30, 30], [-1, 1])
+    servo.value = position
+    sleep(0.1)  # add delay to allow servo to reach position
 
 # Initialize trackbar names
 window_detection_name = 'Object Detection'
